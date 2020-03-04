@@ -1,0 +1,9 @@
+/*
+!output/
+!*.Rproj
+!*.py
+!*.bat
+!*.sh
+!.gitignore
+!*.csv
+!.json
