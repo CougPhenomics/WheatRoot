@@ -55,12 +55,14 @@ def main():
     args = options()
 
     pcv.params.debug = args.debug  #set debug mode
+    pcv.params.debug_outdir = 'debug_1'
+    os.makedirs(pcv.params.debug_outdir, exist_ok=True)
     pcv.params.outdir = args.outdir  #set output directory
     pcv.params.line_thickness = 4
     pcv.params.text_size = 2
     pcv.params.text_thickness = 4
     pcv.params.dpi = 150
-    
+
     # The result file should exist if plantcv-workflow.py was run
     if os.path.exists(args.result):
         # Open the result file
@@ -72,9 +74,10 @@ def main():
         #
         plantbarcode = metadata['metadata']['plantbarcode']['value']
         timestamp = metadata['metadata']['timestamp']['value']
-        
-    print(timestamp)      
+
+    print(timestamp)
     img, pn, fn = pcv.readbayer(args.image)
+    # img = pcv.rotate(img, 90, False)
     mask = createMask(img)
     masked_img = pcv.apply_mask(img, mask, 'black')
 
@@ -108,9 +111,23 @@ def main():
             tip_pts_mask = pcv.morphology.find_tips(skel_img=pruned,
                                                     mask=obj_mask)
 
+
+            # Sort segments vs stem
+            leaf_obj, stem_obj = pcv.morphology.segment_sort(skel_img=pruned,
+                                                     objects=edge_objects,
+                                                     mask=obj_mask)
+
+            # Analyze Stem
+            stem_img = pcv.morphology.analyze_stem(img, stem_obj)
+            if args.writeimg:
+                pcv.print_image(stem_img,
+                                filename=os.path.join(args.outdir,
+                                                      timestamp+'_stem.png'))
+
             # Identify segments
             segmented_img, labeled_img = pcv.morphology.segment_id(
                 skel_img=pruned, objects=edge_objects, mask=obj_mask)
+
 
             # Measure path lengths of segments
             labeled_img2 = pcv.morphology.segment_path_length(
@@ -131,6 +148,7 @@ def main():
                                                     timestamp+'_angle.png'))
 
     pcv.print_results(args.result)
+
 
 if __name__ == '__main__':
     main()

@@ -7,3 +7,4 @@
 !.gitignore
 !*.csv
 !.json
+.Rproj.user
